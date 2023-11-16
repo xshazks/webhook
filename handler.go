@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"math/rand"
 
 	"github.com/aiteung/atapi"
 	"github.com/aiteung/atmessage"
@@ -17,7 +18,7 @@ func PostBalasan(w http.ResponseWriter, r *http.Request) {
 	var msg model.IteungMessage
 	var resp atmessage.Response
 	json.NewDecoder(r.Body).Decode(&msg)
-	link := "https://medium.com/@shahiezasauki/bagaimana-cara-whatsauth-dengan-free-2fa-otp-notif-whatsapp-gateway-api-0854b8b48668" + " dan " + "#"
+	link := "https://medium.com/@shahiezasauki/bagaimana-cara-whatsauth-dengan-free-2fa-otp-notif-whatsapp-gateway-api-0854b8b48668"
 	if r.Header.Get("Secret") == os.Getenv("SECRET") {
 		if msg.Message == "loc" || msg.Message == "Loc" || msg.Message == "lokasi" || msg.LiveLoc {
 			location, err := ReverseGeocode(msg.Latitude, msg.Longitude)
@@ -26,7 +27,7 @@ func PostBalasan(w http.ResponseWriter, r *http.Request) {
 				location = "Unknown Location"
 			}
 
-			reply := fmt.Sprintf("Hai hai haiii kamu pasti lagi di %s \n Koordinatenya : %s - %s\n Cara Penggunaan WhatsAuth Ada di link dibawah ini"+
+			reply := fmt.Sprintf("Coba aku tebakkk, kamu pasti lagi di %s \n Koordinatenya : %s - %s\n Cara Penggunaan WhatsAuth Ada di link dibawah ini"+
 				"yaa kak %s\n", location,
 				strconv.Itoa(int(msg.Longitude)), strconv.Itoa(int(msg.Latitude)), link)
 			dt := &wa.TextMessage{
@@ -36,10 +37,17 @@ func PostBalasan(w http.ResponseWriter, r *http.Request) {
 			}
 			resp, _ = atapi.PostStructWithToken[atmessage.Response]("Token", os.Getenv("TOKEN"), dt, "https://api.wa.my.id/api/send/message/text")
 		} else {
+			randm := []string{
+				"Ehh " + msg.Alias_name + "\nGada siapa-siapa nih disini \n aku Sauki salam kenall yaaaa \n Cara penggunaan WhatsAuth ada di link berikut ini ya kak...\n" + link,
+				"Serlok la ka",
+				"Bentarrrr, jangan spam egee",
+				"Kenapa kak?",
+				"Bentar, tanya mamah dulu",
+			}
 			dt := &wa.TextMessage{
 				To:       msg.Phone_number,
 				IsGroup:  false,
-				Messages: "Hai Hai Haiii kamuuuu " + msg.Alias_name + "\nOrangnya lagi gaadaa niih \n aku Sauki salam kenall yaaaa \n Cara penggunaan WhatsAuth ada di link berikut ini ya kak...\n" + link,
+				Messages: GetRandomString(randm),
 			}
 			resp, _ = atapi.PostStructWithToken[atmessage.Response]("Token", os.Getenv("TOKEN"), dt, "https://api.wa.my.id/api/send/message/text")
 		}
@@ -102,4 +110,9 @@ func Liveloc(w http.ResponseWriter, r *http.Request) {
 		resp.Response = "Secret Salah"
 	}
 	fmt.Fprintf(w, resp.Response)
+}
+
+func GetRandomString(strings []string) string {
+	randomIndex := rand.Intn(len(strings))
+	return strings[randomIndex]
 }
